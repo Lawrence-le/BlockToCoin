@@ -1,0 +1,51 @@
+name: CI Pipeline for Gradle (Java 17)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use Ubuntu runner
+
+    steps:
+    # Step 1: Checkout the repository code
+    - uses: actions/checkout@v4
+
+    # Step 2: Set up JDK 17
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # Step 3: Setup Gradle
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 
+
+    # Step 4: Cache Gradle dependencies [ helps to speed up builds by caching]
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    # Step 5: Build with Gradle
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    # Step 6: Run tests with Gradle
+    - name: Run tests with Gradle
+      run: ./gradlew test
+
+    # Step 7: Upload build artifacts (e.g., JAR files)
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Package
+        path: build/libs
